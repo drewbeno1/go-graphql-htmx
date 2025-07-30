@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTMX + GraphQL</title>
+  <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+</head>
+<body>
+  <h1>Tasks</h1>
+
+  <input id="task-title" placeholder="Title" />
+  <button onclick="addTask()">Add</button>
+
+  <div id="task-list"></div>
+
+  <script>
+    async function queryGraphQL(query) {
+      const res = await fetch("/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      return res.json();
+    }
+
+    async function loadTasks() {
+      const res = await queryGraphQL(`query { tasks { id title completed } }`);
+      const html = res.data.tasks.map(t => `
+        <div>
+          <button onclick="toggleTask('${t.id}')">${t.completed ? '✅' : '⬜'}</button>
+          ${t.title}
+        </div>
+      `).join("");
+      document.getElementById("task-list").innerHTML = html;
+    }
+
+    async function addTask() {
+      const title = document.getElementById("task-title").value;
+      await queryGraphQL(`mutation { addTask(title: "${title}") { id } }`);
+      document.getElementById("task-title").value = "";
+      loadTasks();
+    }
+
+    async function toggleTask(id) {
+      await queryGraphQL(`mutation { toggleTask(id: "${id}") { id } }`);
+      loadTasks();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
