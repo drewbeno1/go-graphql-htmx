@@ -1,0 +1,14 @@
+type Task {
+  id: ID!
+  title: String!
+  completed: Boolean!
+}
+
+type Query {
+  tasks: [Task!]!
+}
+
+type Mutation {
+  addTask(title: String!): Task!
+  toggleTask(id: ID!): Task!
+}
